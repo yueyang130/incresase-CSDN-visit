@@ -12,11 +12,14 @@
 """
 Annotation by Yue Yang:
 1. note: when use requests.get(), please use headers, else probably get nothing from the target url.
+
 2. the code is modified by Yue Yang. The changes are following(see details in git):
     a. the split-page method now dosn't work, so we adapt a not split-page method.
     b. we change from sleeping a fixed time to sleep a random time, which is more like the real visit.
+
 3. note that we use some proxies which comes from  'https://www.kuaidaili.com/free/inha/'
     sometimes we may fail to visit the web, please try again. 
+    sleeping before visit the proxy-get web again can reduce the risk of failure.
 """
 
 import linecache
@@ -170,8 +173,8 @@ class get_kuaidaili_ip():   # 获取快代理免费代理ip
         return random.choice(user_agents)
     # 尝试代理IP增强反反爬
 
-    def get_ip_list(self, url, headers):
-        web_data = requests.get(url, headers=headers)
+    def get_ip_list(self, url, headers, proxies):
+        web_data = requests.get(url, headers=headers, proxies=proxies)
         soup = BeautifulSoup(web_data.text, 'lxml')
         ips = soup.find_all('tr')
         ip_list = []
@@ -189,13 +192,13 @@ class get_kuaidaili_ip():   # 获取快代理免费代理ip
         proxies = {'http': proxy_ip}
         return proxies
 
-    def get_one(self):
+    def get_one(self, proxies = None):
         #url = 'http://www.xicidaili.com/nn/5'
         url = 'https://www.kuaidaili.com/free/inha/%s/' % random.randint(1, 10)
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
         }
-        ip_list = self.get_ip_list(url, headers=headers)
+        ip_list = self.get_ip_list(url, headers=headers, proxies=proxies)
         # print(ip_list)
         return self.get_random_ip(ip_list)
 
@@ -231,20 +234,36 @@ def run():
     url = get_kuaidaili_ip()
     proxies = url.get_one()
     vs = mycsdn.get_vs(headers, proxies=proxies)
+    time.sleep(5)
+    failCnt = 0
 
     for i in range(1, su_+1):
         print(f'{i} / {su_}')
-        proxies = url.get_one()
+        try:
+            new_proxies = url.get_one(proxies)
+            proxies = new_proxies
+            failCnt = 0
+        except IndexError:
+            time.sleep(5)
+            failCnt += 1
+            if failCnt > 10:
+                print('已经连续十次获取新代理失败，害怕被封号，所以停了')
+                raise Exception
+
+
         print("使用的代理ip为：", proxies)
         # 如何调用该类
-        vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
-        print("初始访客量为"+":"+str(vs_0))
-        cur_write_nums = mycsdn.getOriginalArticalNums(
-            headers, proxies, False)  # 得到写了多少篇文章
+        try:
+            vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
+            print("初始访客量为"+":"+str(vs_0))
+            cur_write_nums = mycsdn.getOriginalArticalNums(
+                headers, proxies, False)  # 得到写了多少篇文章
+            cur_blog_page = mycsdn.getScrapyPageNums(
+                cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
+            mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
+        except requests.exceptions:
+            pass
 
-        cur_blog_page = mycsdn.getScrapyPageNums(
-            cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
-        mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
         time.sleep(random.random())  # 给它休息时间 还是怕被封号的
     vs_1 = mycsdn.get_vs(headers, proxies)  # 刷后的访客量
     print("刷后的访客量"+":"+str(vs_1), end='')
