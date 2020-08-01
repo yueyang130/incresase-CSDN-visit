@@ -8,6 +8,15 @@
 '''
 # 思路 随机header 随机文章访问 随机休息时间
 # 导入相关爬虫库和解析xml库即可
+
+"""
+Annotation by Yue Yang:
+1. note: when use requests.get(), please use headers, else probably get nothing from the target url.
+2. the code is modified by Yue Yang. The changes are following(see details in git):
+    a. the split-page method now dosn't work, so we adapt a not split-page method.
+3. note that we use some proxies which comes from  'https://www.kuaidaili.com/free/inha/'
+"""
+
 import linecache
 import time
 import re
@@ -71,6 +80,7 @@ class ScrapyMyCSDN:
                 # print('tag', tag)
                 self.blog_nums = int(
                     tag.find('span', class_='count').get_text())
+                break
                 # print('blog_nums', self.blog_nums)
             if fal:
                 print("原创博客数量为"+":"+str(self.blog_nums))
@@ -111,33 +121,30 @@ class ScrapyMyCSDN:
     '''param[in]:page_num:需要爬取的页数'''
     '''return:0:浏览量刷失败'''
 
-    def beginToScrapy(self, page_num, proxies, fal):
+    def beginToScrapy(self, page_num, header, proxies, fal):
         if page_num == 0:
             if fal:
                 print('连原创博客都不写 爬个鬼!')
             return 0
         else:
-            for nums in range(1, page_num+1):
-                self.cur_article_url = self.blogurl + \
-                    '/article/list/%d' % nums + '?t=1&'  # 拼接字符串
-                article_doc = requests.get(
-                    self.cur_article_url, proxies=proxies)  # 访问该网站
-                # 先判断是否成功访问
-                if article_doc.status_code == 200:
-                    if fal:
-                        print('成功访问网站%s(这是第%d页哦，每页最多有20篇，慢慢来不用着急)' %
-                              (self.cur_article_url, nums))
-                    # 进行解析
-                    cur_page_html = article_doc.text
-                    # print(cur_page_html)
-                    soup = BeautifulSoup(cur_page_html, 'html.parser')
-                    for link in soup.find_all('p', class_="content"):
-                        # print(link.find('a')['href'])
-                        requests.get(link.find('a')[
-                                     'href'], proxies=proxies)  # 进行访问
-                else:
-                    if fal:
-                        print('访问失败')
+            article_doc = requests.get(
+                self.blogurl, timeout=10, headers=header, proxies=proxies)  # 访问该网站
+            # 先判断是否成功访问
+            if article_doc.status_code == 200:
+
+                # 进行解析
+                cur_page_html = article_doc.text
+                # print(cur_page_html)
+                soup = BeautifulSoup(cur_page_html, 'html.parser')
+                articles = soup.find_all('p', class_="content")
+                for link in articles:
+                    # print(link.find('a')['href'])
+                    art_url = link.find('a')['href']
+                    requests.get(art_url, proxies=proxies, headers=header)  # 进行访问
+                    time.sleep(0.3)
+            else:
+                if fal:
+                    print('访问失败')
         if fal:
             print('访问结束')
 
@@ -178,7 +185,7 @@ class get_kuaidaili_ip():   # 获取快代理免费代理ip
         return proxies
 
     def get_one(self):
-        # url = 'http://www.xicidaili.com/nn/5'
+        #url = 'http://www.xicidaili.com/nn/5'
         url = 'https://www.kuaidaili.com/free/inha/%s/' % random.randint(1, 10)
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
@@ -204,8 +211,8 @@ def run_(name_, su_):
 
         cur_blog_page = mycsdn.getScrapyPageNums(
             cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
-        mycsdn.beginToScrapy(cur_blog_page, proxies, False)
-        time.sleep(0.5)  # 给它休息时间 还是怕被封号的
+        mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
+        time.sleep(1)  # 给它休息时间 还是怕被封号的
 
 
 def run():
@@ -214,17 +221,16 @@ def run():
     while su_ >= 10000:
         print("刷访客量的行为可不好哦，请不要太贪心！！(号被封了可别哭)")
         su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
-    mycsdn = ScrapyMyCSDN("nuoyanli")
+    mycsdn = ScrapyMyCSDN(name_)
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
     }
     print("正在计算访客量，请勿关闭.......")
-    # run_('nuoyanli', su_)  # 嘻嘻用我的代码就帮我也刷一下吧(据说好人一般都会取消这个注释)
+    #run_('nuoyanli', su_)  # 嘻嘻用我的代码就帮我也刷一下吧(据说好人一般都会取消这个注释)
     vs_0 = 0
     url = get_kuaidaili_ip()
-    proxies = url.get_one()
+
     for i in range(1, su_+1):
-        url = get_kuaidaili_ip()
         proxies = url.get_one()
         print("使用的代理ip为：", proxies)
         # 如何调用该类
@@ -235,8 +241,9 @@ def run():
 
         cur_blog_page = mycsdn.getScrapyPageNums(
             cur_write_nums, True)  # cur_blog_page:返回需要爬取的页数
-        mycsdn.beginToScrapy(cur_blog_page, proxies, True)
+        mycsdn.beginToScrapy(cur_blog_page, headers, proxies, True)
         time.sleep(5)  # 给它休息时间 还是怕被封号的
+
     vs_1 = mycsdn.get_vs(headers, proxies)  # 刷后的访客量
     print("刷后的访客量"+":"+str(vs_1), end='')
     print(",增加了" + str(vs_1 - vs_0) + "的访客量")
