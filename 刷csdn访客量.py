@@ -14,7 +14,9 @@ Annotation by Yue Yang:
 1. note: when use requests.get(), please use headers, else probably get nothing from the target url.
 2. the code is modified by Yue Yang. The changes are following(see details in git):
     a. the split-page method now dosn't work, so we adapt a not split-page method.
+    b. we change from sleeping a fixed time to sleep a random time, which is more like the real visit.
 3. note that we use some proxies which comes from  'https://www.kuaidaili.com/free/inha/'
+    sometimes we may fail to visit the web, please try again. 
 """
 
 import linecache
@@ -29,6 +31,9 @@ from lxml import etree
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
+headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+        }
 
 # 爬取csdn类
 
@@ -141,7 +146,7 @@ class ScrapyMyCSDN:
                     # print(link.find('a')['href'])
                     art_url = link.find('a')['href']
                     requests.get(art_url, proxies=proxies, headers=header)  # 进行访问
-                    time.sleep(0.3)
+                    time.sleep(0.1)
             else:
                 if fal:
                     print('访问失败')
@@ -197,9 +202,7 @@ class get_kuaidaili_ip():   # 获取快代理免费代理ip
 
 def run_(name_, su_):
     for i in range(1, 2):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
-        }
+
         url = get_kuaidaili_ip()
         proxies = url.get_one()
         # print("使用的代理ip为：", proxies)
@@ -212,7 +215,7 @@ def run_(name_, su_):
         cur_blog_page = mycsdn.getScrapyPageNums(
             cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
         mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
-        time.sleep(1)  # 给它休息时间 还是怕被封号的
+        time.sleep(random.random() * 0.1)  # 给它休息时间 还是怕被封号的
 
 
 def run():
@@ -222,32 +225,31 @@ def run():
         print("刷访客量的行为可不好哦，请不要太贪心！！(号被封了可别哭)")
         su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
     mycsdn = ScrapyMyCSDN(name_)
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
-    }
+
     print("正在计算访客量，请勿关闭.......")
     #run_('nuoyanli', su_)  # 嘻嘻用我的代码就帮我也刷一下吧(据说好人一般都会取消这个注释)
-    vs_0 = 0
     url = get_kuaidaili_ip()
+    proxies = url.get_one()
+    vs = mycsdn.get_vs(headers, proxies=proxies)
 
     for i in range(1, su_+1):
+        print(f'{i} / {su_}')
         proxies = url.get_one()
         print("使用的代理ip为：", proxies)
         # 如何调用该类
         vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
         print("初始访客量为"+":"+str(vs_0))
         cur_write_nums = mycsdn.getOriginalArticalNums(
-            headers, proxies, True)  # 得到写了多少篇文章
+            headers, proxies, False)  # 得到写了多少篇文章
 
         cur_blog_page = mycsdn.getScrapyPageNums(
-            cur_write_nums, True)  # cur_blog_page:返回需要爬取的页数
-        mycsdn.beginToScrapy(cur_blog_page, headers, proxies, True)
-        time.sleep(5)  # 给它休息时间 还是怕被封号的
-
+            cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
+        mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
+        time.sleep(random.random())  # 给它休息时间 还是怕被封号的
     vs_1 = mycsdn.get_vs(headers, proxies)  # 刷后的访客量
     print("刷后的访客量"+":"+str(vs_1), end='')
-    print(",增加了" + str(vs_1 - vs_0) + "的访客量")
-    if vs_1 - vs_0 > 0:
+    print(",增加了" + str(vs_1 - vs) + "的访客量")
+    if vs_1 - vs > 0:
         print("哇有人悄悄访问了你的博客呢，快去看看是谁吧！")
 
 
