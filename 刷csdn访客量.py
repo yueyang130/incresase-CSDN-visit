@@ -16,7 +16,7 @@ Annotation by Yue Yang:
 2. the code is modified by Yue Yang. The changes are following(see details in git):
     a. the split-page method now dosn't work, so we adapt a not split-page method.
     b. we change from sleeping a fixed time to sleep a random time, which is more like the real visit.
-
+    c. a single thread to multi-thread
 3. note that we use some proxies which comes from  'https://www.kuaidaili.com/free/inha/'
     sometimes we may fail to visit the web, please try again. 
     sleeping before visit the proxy-get web again can reduce the risk of failure.
@@ -32,6 +32,7 @@ import random
 from fake_useragent import UserAgent
 from lxml import etree
 import ssl
+import _thread, threading
 ssl._create_default_https_context = ssl._create_unverified_context
 
 headers = {
@@ -57,7 +58,7 @@ class ScrapyMyCSDN:
         main_response = requests.get(
             self.blogurl, timeout=10, headers=headers, proxies=proxies)
         if main_response.status_code == 200:
-            print('获取成功')
+            #print('获取成功')
             htm = etree.HTML(main_response.content.decode('utf-8'))
             rep = str(htm.xpath(
                 "//*[@id='asideProfile']/div[2]/dl[5]/@title"))
@@ -218,21 +219,28 @@ def run_(name_, su_):
         cur_blog_page = mycsdn.getScrapyPageNums(
             cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
         mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
-        time.sleep(random.random() * 0.1)  # 给它休息时间 还是怕被封号的
+        time.sleep(random.random() * 1)  # 给它休息时间 还是怕被封号的
 
 
-def run():
-    name_ = input("请输入您的csdn博客id:")
-    su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
+def run(threadName, name_, su_):
+    #name_ = input("请输入您的csdn博客id:")
+    #su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
     while su_ >= 10000:
         print("刷访客量的行为可不好哦，请不要太贪心！！(号被封了可别哭)")
         su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
     mycsdn = ScrapyMyCSDN(name_)
 
-    print("正在计算访客量，请勿关闭.......")
+    #print("正在计算访客量，请勿关闭.......")
     #run_('nuoyanli', su_)  # 嘻嘻用我的代码就帮我也刷一下吧(据说好人一般都会取消这个注释)
     url = get_kuaidaili_ip()
-    proxies = url.get_one()
+
+    while True:
+        try:
+            proxies = url.get_one()
+            break
+        except IndexError:
+            time.sleep(5)
+
     vs = mycsdn.get_vs(headers, proxies=proxies)
     time.sleep(5)
     failCnt = 0
@@ -251,11 +259,11 @@ def run():
                 raise Exception
 
 
-        print("使用的代理ip为：", proxies)
+        #print("使用的代理ip为：", proxies)
         # 如何调用该类
         try:
             vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
-            print("初始访客量为"+":"+str(vs_0))
+            print(f"{threadName}访客量为"+":"+str(vs_0))
             cur_write_nums = mycsdn.getOriginalArticalNums(
                 headers, proxies, False)  # 得到写了多少篇文章
             cur_blog_page = mycsdn.getScrapyPageNums(
@@ -264,13 +272,23 @@ def run():
         except requests.exceptions:
             pass
 
-        time.sleep(random.random())  # 给它休息时间 还是怕被封号的
+        time.sleep(random.random()*20)  # 给它休息时间 还是怕被封号的
+
     vs_1 = mycsdn.get_vs(headers, proxies)  # 刷后的访客量
-    print("刷后的访客量"+":"+str(vs_1), end='')
+    print(f"{threadName}刷后的访客量"+":"+str(vs_1), end='')
     print(",增加了" + str(vs_1 - vs) + "的访客量")
     if vs_1 - vs > 0:
         print("哇有人悄悄访问了你的博客呢，快去看看是谁吧！")
 
 
 if __name__ == '__main__':
-    run()
+    trd_list = []
+    blogname = 'qq_43714612'
+    su = 100
+
+    for i in range(5):
+        t = threading.Thread(target=run, args=(f'thread{i}', blogname, su) )
+        t.start()
+        trd_list.append(t)
+
+
