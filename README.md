@@ -11,7 +11,7 @@
 
 
 
-![image-20200818091213676](F:\code\3rd party project\Python_csdn-master\Python_csdn-master\screen-shot.jpg)
+![image-20200818091213676](.\screen-shot.jpg)
 
 
 
