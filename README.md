@@ -8,9 +8,17 @@
 
 
 ### 关于如何访问csdn博客
-- 1.$xpath$获取博客数量和访问量
-- 2.构造链接用	$requests$,$get$使用随机代理$ip$，随机$header$访问博客
-详细见Github：[https://github.com/nuoyanli/Python_csdn](https://github.com/nuoyanli/Python_csdn)
-下面放一张没有可视化的运行结果图：![在这里插入图片描述](https://img-blog.csdnimg.cn/20200205215839738.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L251b3lhbmxp,size_16,color_FFFFFF,t_70)
-和打包好的exe:
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200205215938412.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L251b3lhbmxp,size_16,color_FFFFFF,t_70)
+
+
+
+![image-20200818091213676](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20200818091213676.png)
+
+
+
+温馨小提示：
+
+总次数 = 线程数量（图中是5） * 单线程次数su
+
+总次数最好别超过1w哦，小心被封号。
+
+还有各位帅气的哥哥和pl小姐姐们，ball ball你们别注释掉中间那两行，帮我也刷一刷吧，反正开多线程也不影响你们的效率。
