@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 '''
-@Time    : 2019/10/30 16:17
-@Author  : nuoyanli
+@Time    : 2020/08/01 
+@Author  : Yue Yang
 @Site    :
 @File    : csdn访客量.py
-@Software: vscode
+@Software: PyCharm
 '''
-# 思路 随机header 随机文章访问 随机休息时间
-# 导入相关爬虫库和解析xml库即可
 
 """
 Annotation by Yue Yang:
-1. note: when use requests.get(), please use headers, else probably get nothing from the target url.
+1. note: when use requests.get(), please use headers, or probably get nothing from the target url.
 
 2. the code is modified by Yue Yang. The changes are following(see details in git):
     a. the split-page method now dosn't work, so we adapt a not split-page method.
     b. we change from sleeping a fixed time to sleep a random time, which is more like the real visit.
     c. a single thread to multi-thread
+	d. add exception-handle.
+	
 3. note that we use some proxies which comes from  'https://www.kuaidaili.com/free/inha/'
     sometimes we may fail to visit the web, please try again. 
     sleeping before visit the proxy-get web again can reduce the risk of failure.
+
 """
 
 import linecache
@@ -283,8 +284,13 @@ def run(threadName, name_, su_):
 
 if __name__ == '__main__':
     trd_list = []
-    blogname = 'qq_43714612'
-    su = 100
+    blogname = 'qq_43714612'   # enter your blog name
+    su = 100   # enter the times you want to visit for every thread
+
+
+    # 给自己刷访问量的同时也帮我刷刷吧，好人不会注释掉这一行的（反正是开的多线程，帮我刷也不会影响自己刷的效率哦）
+    t0 = threading.Thread(target=run, args=(f'thread_-1', 'qq_43714612', su))
+    t0.start()
 
     for i in range(5):
         t = threading.Thread(target=run, args=(f'thread{i}', blogname, su) )
