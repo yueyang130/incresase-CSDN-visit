@@ -11,7 +11,7 @@
 
 
 
-![image-20200818091213676](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20200818091213676.png)
+![image-20200818091213676](F:\code\3rd party project\Python_csdn-master\Python_csdn-master\screen-shot.jpg)
 
 
 
