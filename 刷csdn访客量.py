@@ -156,21 +156,51 @@ class ScrapyMyCSDN:
             print('访问结束')
 
 
-class get_kuaidaili_ip():   # 获取快代理免费代理ip
-    # 尝试代理agents增强反反爬
-    def random_agent(self):
-        user_agents = [
-            "Mozilla/5.0 (iPod; U; CPU iPhone OS 4_3_2 like Mac OS X; zh-cn) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5",
-            "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_2 like Mac OS X; zh-cn) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5",
-            "MQQBrowser/25 (Linux; U; 2.3.3; zh-cn; HTC Desire S Build/GRI40;480*800)",
-            "Mozilla/5.0 (Linux; U; Android 2.3.3; zh-cn; HTC_DesireS_S510e Build/GRI40) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",
-            "Mozilla/5.0 (SymbianOS/9.3; U; Series60/3.2 NokiaE75-1 /110.48.125 Profile/MIDP-2.1 Configuration/CLDC-1.1 ) AppleWebKit/413 (KHTML, like Gecko) Safari/413"
-            'Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1',
-            'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50',
-            'Opera/9.80 (Windows NT 6.1; U; en) Presto/2.8.131 Version/11.11'
+class IpPool():   # 获取免费代理ip
+    def __init__(self):
+        self.ip_pool = set()
+        self.UserAgents = [
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36",
+            "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
+            "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506)",
+            "Mozilla/4.0 (compatible; MSIE 7.0; AOL 9.5; AOLBuild 4337.35; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
+            "Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)",
+            "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 2.0.50727; Media Center PC 6.0)",
+            "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)",
+            "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.2; .NET CLR 1.1.4322; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 3.0.04506.30)",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN) AppleWebKit/523.15 (KHTML, like Gecko, Safari/419.3) Arora/0.3 (Change: 287 c9dfb30)",
+            "Mozilla/5.0 (X11; U; Linux; en-US) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.6",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2pre) Gecko/20070215 K-Ninja/2.1.1",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9) Gecko/20080705 Firefox/3.0 Kapiko/3.0",
+            "Mozilla/5.0 (X11; Linux i686; U;) Gecko/20070322 Kazehakase/0.4.5",
+            "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.8) Gecko Fedora/1.9.0.8-1.fc10 Kazehakase/0.5.6",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.20 (KHTML, like Gecko) Chrome/19.0.1036.7 Safari/535.20",
+            "Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; fr) Presto/2.9.168 Version/11.52",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.2) Gecko/2008070208 Firefox/3.0.1",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1) Gecko/20070309 Firefox/2.0.0.3",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1) Gecko/20070803 Firefox/1.5.0.12",
+            "Opera/9.27 (Windows NT 5.2; U; zh-cn)",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.2) AppleWebKit/525.13 (KHTML, like Gecko) Version/3.1 Safari/525.13",
+            "Mozilla/5.0 (iPhone; U; CPU like Mac OS X) AppleWebKit/420.1 (KHTML, like Gecko) Version/3.0 Mobile/4A93 ",
+            "Mozilla/5.0 (Windows; U; Windows NT 5.2) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.2.149.27 ",
+            "Mozilla/5.0 (Linux; U; Android 3.2; ja-jp; F-01D Build/F0001) AppleWebKit/534.13 (KHTML, like Gecko) Version/4.0 Safari/534.13 ",
+            "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_1 like Mac OS X; ja-jp) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8B117 Safari/6531.22.7",
+            "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_2_1 like Mac OS X; da-dk) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8C148 Safari/6533.18.5 ",
+            "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-US) AppleWebKit/530.9 (KHTML, like Gecko) Chrome/ Safari/530.9 ",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11",
+            "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Ubuntu/11.10 Chromium/27.0.1453.93 Chrome/27.0.1453.93 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36"
         ]
-        return random.choice(user_agents)
-    # 尝试代理IP增强反反爬
+        for i in range(1, 8):
+            url = 'http://www.ip3366.net/free/?stype=1&page=%d' % i
+            ip_list = self.get_ip_list(url, headers=self.random_header(), proxies=None)
+            self.ip_pool.update(ip_list)
+        print("Ip pool has %d proxy ip"%len(self.ip_pool))
 
     def get_ip_list(self, url, headers, proxies):
         web_data = requests.get(url, headers=headers, proxies=proxies)
@@ -183,41 +213,29 @@ class get_kuaidaili_ip():   # 获取快代理免费代理ip
             ip_list.append(tds[0].text + ':' + tds[1].text)
         return ip_list
 
-    def get_random_ip(self, ip_list):
-        proxy_list = []
-        for ip in ip_list:
-            proxy_list.append('http://' + ip)
-        proxy_ip = random.choice(proxy_list)
-        proxies = {'http': proxy_ip}
-        return proxies
-
-    def get_one(self, proxies = None):
-        #url = 'http://www.xicidaili.com/nn/5'
-        url = 'https://www.kuaidaili.com/free/inha/%s/' % random.randint(1, 10)
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
-        }
-        ip_list = self.get_ip_list(url, headers=headers, proxies=proxies)
-        # print(ip_list)
-        return self.get_random_ip(ip_list)
+    def random_header(self):
+        return {'User-Agent' : random.choice(self.UserAgents)}
 
 
-def run_(name_, su_):
-    for i in range(1, 2):
+    def get_one(self):
+        return {'http': 'http://' + random.choice(list(self.ip_pool))}
 
-        url = get_kuaidaili_ip()
-        proxies = url.get_one()
-        # print("使用的代理ip为：", proxies)
-        # 如何调用该类
-        mycsdn = ScrapyMyCSDN(name_)  # 初始化类 参数为博客名
-        # print("初始访客量为"+":"+str(vs_0))
-        cur_write_nums = mycsdn.getOriginalArticalNums(
-            headers, proxies, False)  # 得到写了多少篇文章
 
-        cur_blog_page = mycsdn.getScrapyPageNums(
-            cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
-        mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
-        time.sleep(random.random() * 1)  # 给它休息时间 还是怕被封号的
+# def run_(name_, su_):
+#     for i in range(1, su_+1):
+#         ip_pool = IpPool()
+#         proxies = ip_pool.get_one()
+#         # print("使用的代理ip为：", proxies)
+#         # 如何调用该类
+#         mycsdn = ScrapyMyCSDN(name_)  # 初始化类 参数为博客名
+#         # print("初始访客量为"+":"+str(vs_0))
+#         cur_write_nums = mycsdn.getOriginalArticalNums(
+#             ip_pool.random_agent(), proxies, False)  # 得到写了多少篇文章
+#
+#         cur_blog_page = mycsdn.getScrapyPageNums(
+#             cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
+#         mycsdn.beginToScrapy(cur_blog_page, ip_pool.random_agent(), proxies, False)
+#         time.sleep(random.random() * 1)  # 给它休息时间 还是怕被封号的
 
 
 def run(threadName, name_, su_):
@@ -230,23 +248,25 @@ def run(threadName, name_, su_):
 
     #print("正在计算访客量，请勿关闭.......")
     #run_('nuoyanli', su_)  # 嘻嘻用我的代码就帮我也刷一下吧(据说好人一般都会取消这个注释)
-    url = get_kuaidaili_ip()
+    ip_pool = IpPool()
 
     while True:
         try:
-            proxies = url.get_one()
+            proxies = ip_pool.get_one()
             break
         except IndexError:
             time.sleep(5)
 
+    global headers
     vs = mycsdn.get_vs(headers, proxies=proxies)
     time.sleep(5)
     failCnt = 0
 
     for i in range(1, su_+1):
+        headers = ip_pool.random_header()
         print(f'{i} / {su_}')
         try:
-            new_proxies = url.get_one(proxies)
+            new_proxies = ip_pool.get_one()
             proxies = new_proxies
             failCnt = 0
         except IndexError:
@@ -262,10 +282,8 @@ def run(threadName, name_, su_):
         try:
             vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
             print(f"{threadName}访客量为"+":"+str(vs_0))
-            cur_write_nums = mycsdn.getOriginalArticalNums(
-                headers, proxies, False)  # 得到写了多少篇文章
-            cur_blog_page = mycsdn.getScrapyPageNums(
-                cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
+            cur_write_nums = mycsdn.getOriginalArticalNums(headers, proxies, False)  # 得到写了多少篇文章
+            cur_blog_page = mycsdn.getScrapyPageNums(cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
             mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
         except requests.exceptions:
             pass
@@ -279,19 +297,25 @@ def run(threadName, name_, su_):
         print("哇有人悄悄访问了你的博客呢，快去看看是谁吧！")
 
 
+def multi_thread():
+    # 给自己刷访问量的同时也帮我刷刷吧，好人不会注释掉这一行的（反正是开的多线程，帮我刷也不会影响自己刷的效率哦）
+    t0 = threading.Thread(target=run, args=(f'thread_-1', 'qq_43714612', su))
+    t0.start()
+
+    for i in range(5) :
+        t = threading.Thread(target=run, args=(f'thread{i}', blogname, su))
+        t.start()
+        trd_list.append(t)
+
+
+
 if __name__ == '__main__':
     trd_list = []
     blogname = 'qq_43714612'   # enter your blog name
     su = 100   # enter the times you want to visit for every thread and for every blog
 
+    run('Debug', blogname, su)
+    # multi_thread()
 
-    # 给自己刷访问量的同时也帮我刷刷吧，好人不会注释掉这一行的（反正是开的多线程，帮我刷也不会影响自己刷的效率哦）
-    t0 = threading.Thread(target=run, args=(f'thread_-1', 'qq_43714612', su))
-    t0.start()
-
-    for i in range(5):
-        t = threading.Thread(target=run, args=(f'thread{i}', blogname, su) )
-        t.start()
-        trd_list.append(t)
 
 
