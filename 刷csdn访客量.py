@@ -59,12 +59,9 @@ class ScrapyMyCSDN:
         main_response = requests.get(
             self.blogurl, timeout=10, headers=headers, proxies=proxies)
         if main_response.status_code == 200:
-            #print('获取成功')
-            htm = etree.HTML(main_response.content.decode('utf-8'))
-            rep = str(htm.xpath(
-                "//*[@id='asideProfile']/div[2]/dl[5]/@title"))
-            rep = rep.replace('[\'', '')
-            self.blog_vs = int(rep.replace('\']', ''))
+            soup = BeautifulSoup(main_response.text, 'html.parser')
+            text : str = soup.find('div', class_='user-profile-statistics-num').text
+            self.blog_vs = int(text.replace(',',''))
             return self.blog_vs  # 返回博文数量
         else:
             print('爬取失败')
@@ -285,7 +282,7 @@ def run(threadName, name_, su_):
 if __name__ == '__main__':
     trd_list = []
     blogname = 'qq_43714612'   # enter your blog name
-    su = 100   # enter the times you want to visit for every thread
+    su = 100   # enter the times you want to visit for every thread and for every blog
 
 
     # 给自己刷访问量的同时也帮我刷刷吧，好人不会注释掉这一行的（反正是开的多线程，帮我刷也不会影响自己刷的效率哦）
