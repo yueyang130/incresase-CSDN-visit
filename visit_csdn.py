@@ -234,12 +234,12 @@ def run(threadName, name_, su_):
         print("哇有人悄悄访问了你的博客呢，快去看看是谁吧！")
 
 
-def multi_thread():
+def multi_thread(t_num = 5):
     # 给自己刷访问量的同时也帮我刷刷吧，好人不会注释掉这一行的（反正是开的多线程，帮我刷也不会影响自己刷的效率哦）
     t0 = threading.Thread(target=run, args=(f'thread_-1', 'qq_43714612', su))
     t0.start()
 
-    for i in range(5) :
+    for i in range(t_num) :
         t = threading.Thread(target=run, args=(f'thread{i}', blogname, su))
         t.start()
         trd_list.append(t)
@@ -249,7 +249,7 @@ def multi_thread():
 if __name__ == '__main__':
     trd_list = []
     blogname = 'qq_43714612'   # enter your blog name
-    su = 100   # enter the times you want to visit for every thread and for every blog
+    su = 1000   # enter the times you want to visit for every thread and for every blog
 
     run('Debug', blogname, su)
     # multi_thread()
