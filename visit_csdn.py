@@ -67,93 +67,28 @@ class ScrapyMyCSDN:
             print('爬取失败')
             return 0  # 返回0 说明博文数为0或者爬取失败
 
-    ''' Func:获取写了多少篇原创文章 '''
-    ''' return:写了多少篇原创文章'''
-
-    def getOriginalArticalNums(self, headers, proxies, fal):
-        main_response = requests.get(
-            self.blogurl, timeout=10, headers=headers, proxies=proxies)
-        # 判断是否成功获取 (根据状态码来判断)
-        # print('状态码', main_response.status_code)
-        if main_response.status_code == 200:
-            if fal:
-                print('获取成功')
-            self.main_html = main_response.text
-            # print(self.main_html, main_response.text)
-            html = BeautifulSoup(self.main_html, "html.parser")
-            # print('html', html)
-            # print('内容', html.find_all('div', class_='data-info d-flex item-tiling'))
-            for tag in html.find_all('div', class_='data-info d-flex item-tiling'):
-                # print('tag', tag)
-                self.blog_nums = int(
-                    tag.find('span', class_='count').get_text())
-                break
-                # print('blog_nums', self.blog_nums)
-            if fal:
-                print("原创博客数量为"+":"+str(self.blog_nums))
-            return self.blog_nums  # 返回博文数量
-        else:
-            if fal:
-                print('爬取失败')
-            return 0  # 返回0 说明博文数为0或者爬取失败
-
-    ''' Func：分页'''
-    ''' param[in]:nums:博文数 '''
-    ''' return: 需要爬取的页数'''
-
-    def getScrapyPageNums(self, nums, fal):
-        self.blog_original_nums = nums
-        if nums == 0:
-            if fal:
-                print('它没写文章，0页啊！')
-            return 0
-        else:
-            if fal:
-                print('现在开始计算')
-            cur_blog = nums/20  # 获得精确的页码
-            cur_read_page = int(nums/20)  # 保留整数
-            # 进行比对
-            if cur_blog > cur_read_page:
-                self.blog_original_nums = cur_read_page + 1
-                if fal:
-                    print('你需要爬取 %d' % self.blog_original_nums + '页')
-                return self.blog_original_nums  # 返回的数字
-            else:
-                self.blog_original_nums = cur_read_page
-                if fal:
-                    print('你需要爬取 %d' % self.blog_original_nums + '页')
-            return self.blog_original_nums
 
     '''Func:开始爬取，实际就是刷浏览量hhh'''
     '''param[in]:page_num:需要爬取的页数'''
     '''return:0:浏览量刷失败'''
 
-    def beginToScrapy(self, page_num, header, proxies, fal):
-        if page_num == 0:
-            if fal:
-                print('连原创博客都不写 爬个鬼!')
-            return 0
-        else:
-            article_doc = requests.get(
-                self.blogurl, timeout=10, headers=header, proxies=proxies)  # 访问该网站
-            # 先判断是否成功访问
-            if article_doc.status_code == 200:
+    def beginToScrapy(self, header, proxies, fal):
+        article_doc = requests.get(
+            self.blogurl, timeout=10, headers=header, proxies=proxies)  # 访问该网站
 
-                # 进行解析
-                cur_page_html = article_doc.text
-                # print(cur_page_html)
-                soup = BeautifulSoup(cur_page_html, 'html.parser')
-                articles = soup.find_all('p', class_="content")
-                for link in articles:
-                    # print(link.find('a')['href'])
-                    art_url = link.find('a')['href']
-                    requests.get(art_url, proxies=proxies, headers=header)  # 进行访问
-                    time.sleep(0.1)
-            else:
-                if fal:
-                    print('访问失败')
-        if fal:
-            print('访问结束')
+        if article_doc.status_code == 200:
+            cur_page_html = article_doc.text
+            soup = BeautifulSoup(cur_page_html, 'html.parser')
+            articles = soup.find_all('article', class_="blog-list-box")
+            for link in articles:
+                # print(link.find('a')['href'])
+                art_url = link.find('a')['href']
+                requests.get(art_url, proxies=proxies, headers=header)  # 进行访问
+                time.sleep(0.1)
+        else:
+            if fal:
+                print('访问失败')
+
 
 
 class IpPool():   # 获取免费代理ip
@@ -196,11 +131,17 @@ class IpPool():   # 获取免费代理ip
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36",
             "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36"
         ]
-        for i in range(1, 8):
-            url = 'http://www.ip3366.net/free/?stype=1&page=%d' % i
-            ip_list = self.get_ip_list(url, headers=self.random_header(), proxies=None)
-            self.ip_pool.update(ip_list)
-        print("Ip pool has %d proxy ip"%len(self.ip_pool))
+        while True:
+            for i in range(1, 8):
+                url = 'http://www.ip3366.net/free/?stype=1&page=%d' % i
+                ip_list = self.get_ip_list(url, headers=self.random_header(), proxies=None)
+                self.ip_pool.update(ip_list)
+            if len(self.ip_pool) > 0:
+                print("Ip pool has %d proxy ip"%len(self.ip_pool))
+                return
+            else:
+                time.sleep(10)
+
 
     def get_ip_list(self, url, headers, proxies):
         web_data = requests.get(url, headers=headers, proxies=proxies)
@@ -259,12 +200,10 @@ def run(threadName, name_, su_):
 
     global headers
     vs = mycsdn.get_vs(headers, proxies=proxies)
-    time.sleep(5)
+    time.sleep(1)
     failCnt = 0
 
     for i in range(1, su_+1):
-        headers = ip_pool.random_header()
-        print(f'{i} / {su_}')
         try:
             new_proxies = ip_pool.get_one()
             proxies = new_proxies
@@ -276,16 +215,14 @@ def run(threadName, name_, su_):
                 print('已经连续十次获取新代理失败，害怕被封号，所以停了')
                 raise Exception
 
-
-        #print("使用的代理ip为：", proxies)
-        # 如何调用该类
         try:
-            vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
-            print(f"{threadName}访客量为"+":"+str(vs_0))
-            cur_write_nums = mycsdn.getOriginalArticalNums(headers, proxies, False)  # 得到写了多少篇文章
-            cur_blog_page = mycsdn.getScrapyPageNums(cur_write_nums, False)  # cur_blog_page:返回需要爬取的页数
-            mycsdn.beginToScrapy(cur_blog_page, headers, proxies, False)
-        except requests.exceptions:
+            headers = ip_pool.random_header()
+            if i < 10 or i % 10 == 0 :
+                print(f'{i} / {su_}')
+                vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
+                print(f"{threadName}访客量为"+":"+str(vs_0))
+            mycsdn.beginToScrapy(headers, proxies, False)
+        except Exception:
             pass
 
         time.sleep(random.random()*20)  # 给它休息时间 还是怕被封号的
@@ -306,7 +243,7 @@ def multi_thread():
         t = threading.Thread(target=run, args=(f'thread{i}', blogname, su))
         t.start()
         trd_list.append(t)
-
+        time.sleep(10)
 
 
 if __name__ == '__main__':
