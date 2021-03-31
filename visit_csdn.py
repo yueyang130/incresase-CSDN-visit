@@ -84,7 +84,7 @@ class ScrapyMyCSDN:
                 # print(link.find('a')['href'])
                 art_url = link.find('a')['href']
                 requests.get(art_url, proxies=proxies, headers=header)  # 进行访问
-                time.sleep(0.1)
+                time.sleep(random.random()*0.5)
         else:
             if fal:
                 print('访问失败')
@@ -205,8 +205,8 @@ def run(threadName, name_, su_):
 
     for i in range(1, su_+1):
         try:
-            new_proxies = ip_pool.get_one()
-            proxies = new_proxies
+            proxies = ip_pool.get_one()
+            headers = ip_pool.random_header()
             failCnt = 0
         except IndexError:
             time.sleep(5)
@@ -216,9 +216,9 @@ def run(threadName, name_, su_):
                 raise Exception
 
         try:
-            headers = ip_pool.random_header()
+            
             if i < 10 or i % 10 == 0 :
-                print(f'{i} / {su_}')
+                print(f'{i} / {su_}',end=' ')
                 vs_0 = mycsdn.get_vs(headers, proxies)  # 初始访客量
                 print(f"{threadName}访客量为"+":"+str(vs_0))
             mycsdn.beginToScrapy(headers, proxies, False)
@@ -251,8 +251,8 @@ if __name__ == '__main__':
     blogname = 'qq_43714612'   # enter your blog name
     su = 1000   # enter the times you want to visit for every thread and for every blog
 
-    run('Debug', blogname, su)
-    # multi_thread()
+    # run('Debug', blogname, su)
+    multi_thread(3)
 
 
 
