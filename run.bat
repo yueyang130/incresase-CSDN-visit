@@ -1,0 +1,1 @@
+python "F:\code\3rd party project\Python_csdn-master\Python_csdn-master\visit_csdn.py"

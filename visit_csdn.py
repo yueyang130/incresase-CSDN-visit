@@ -90,7 +90,7 @@ class ScrapyMyCSDN:
             # print(link.find('a')['href'])
             art_url = link.find('a')['href']
             requests.get(art_url, proxies=random.choice(proxies), headers=header)  # 进行访问
-            time.sleep(random.random()*0.2)
+            time.sleep(random.random()*10)
 
 
 
