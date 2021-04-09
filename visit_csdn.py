@@ -71,12 +71,15 @@ class ScrapyMyCSDN:
             self.blogurl, timeout=10, headers=headers, proxies=proxies)
         if main_response.status_code == 200:
             soup = BeautifulSoup(main_response.text, 'html.parser')
-            text : str = soup.find('div', class_='user-profile-statistics-num').text
-            self.blog_vs = int(text.replace(',',''))
-            return self.blog_vs
+            ele = soup.find('div', class_='user-profile-statistics-num')
+            if ele is not None:
+                text = ele.text
+                self.blog_vs = int(text.replace(',',''))
+                return self.blog_vs
+            else:
+                return 0
         else:
-            print('爬取失败')
-            return 0  # 返回0 说明博文数为0或者爬取失败
+            return 0
 
 
     '''Func:开始爬取，实际就是刷浏览量hhh'''
@@ -172,16 +175,15 @@ def run(threadName, name_, su_):
         su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
     mycsdn = ScrapyMyCSDN(name_, header=ip_pool.random_header())
 
-    vs = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
+    vs_0 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
     time.sleep(1)
     failCnt = 0
 
     for i in range(1, su_+1):
         try:
             if i < 10 or i % 10 == 0 :
-                print(f'{i} / {su_}',end=' ')
-                vs_0 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
-                print(f"{threadName}访客量为"+":"+str(vs_0))
+                vs = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
+                if vs > 0: print(f"{threadName}, {i} / {su_}, 访客量为"+":"+str(vs))
             proxy_list = [ip_pool.get_one_proxy() for _ in range(mycsdn.blog_nums)]
             mycsdn.beginToScrapy(headers, proxy_list)
         except:
@@ -190,10 +192,10 @@ def run(threadName, name_, su_):
         time.sleep(random.random()*20)  # 给它休息时间 还是怕被封号的
 
     vs_1 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
-    print(f"{threadName}刷后的访客量"+":"+str(vs_1), end='')
-    print(",增加了" + str(vs_1 - vs) + "的访客量")
-    if vs_1 - vs > 0:
-        print("哇有人悄悄访问了你的博客呢，快去看看是谁吧！")
+    if vs_1 > 0:
+        print(f"{threadName}刷后的访客量"+":"+str(vs_1), end='')
+        if vs_0 > 0:
+            print(",增加了" + str(vs_1 - vs_0) + "的访客量")
 
 
 def multi_thread(t_num = 5):
