@@ -50,23 +50,22 @@ class ScrapyMyCSDN:
         self.blogurl = csdn_url + blogname  # 拼接字符串成需要爬取的主页url
         self.blog_vs = 0  # 博客访客量
 
-        article_doc = requests.get(self.blogurl, timeout=10, headers=header)  # 访问该网站
-
         while True:
+            article_doc = requests.get(self.blogurl, timeout=10, headers=header)  # 访问该网站
             if article_doc.status_code == 200 :
                 cur_page_html = article_doc.text
                 soup = BeautifulSoup(cur_page_html, 'html.parser')
                 self.articles = soup.find_all('article', class_="blog-list-box")
-                break
+                self.blog_nums = len(self.articles)  # 原创博客数量
+                if self.blog_nums > 0:
+                    break
+                else:
+                    time.sleep(10)
             else:
                 time.sleep(10)
 
-        self.blog_nums = len(self.articles)  # 原创博客数量
-
-
 
     '''博客访问量'''
-
     def get_vs(self, headers, proxies):
         main_response = requests.get(
             self.blogurl, timeout=10, headers=headers, proxies=proxies)
@@ -83,10 +82,10 @@ class ScrapyMyCSDN:
     '''Func:开始爬取，实际就是刷浏览量hhh'''
     '''param[in]:page_num:需要爬取的页数'''
     '''return:0:浏览量刷失败'''
-
     def beginToScrapy(self, header, proxies : list):
         # 每次都仅随机访问一半的博客，且访问每个博客的proxy都是临时随机抽取的，尽量模拟真实访问行为
-        for link in random.sample(self.articles, int(len(self.articles)/2)):
+        article_links = random.sample(self.articles, int(len(self.articles)/2))
+        for link in article_links:
             # print(link.find('a')['href'])
             art_url = link.find('a')['href']
             requests.get(art_url, proxies=random.choice(proxies), headers=header)  # 进行访问
@@ -171,7 +170,7 @@ def run(threadName, name_, su_):
     while su_ >= 10000:
         print("刷访客量的行为可不好哦，请不要太贪心！！(号被封了可别哭)")
         su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
-    mycsdn = ScrapyMyCSDN(name_)
+    mycsdn = ScrapyMyCSDN(name_, header=ip_pool.random_header())
 
     vs = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
     time.sleep(1)
@@ -183,7 +182,7 @@ def run(threadName, name_, su_):
                 print(f'{i} / {su_}',end=' ')
                 vs_0 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
                 print(f"{threadName}访客量为"+":"+str(vs_0))
-            proxy_list = [ip_pool.get_one_proxy() for i in range(mycsdn.blog_nums)]
+            proxy_list = [ip_pool.get_one_proxy() for _ in range(mycsdn.blog_nums)]
             mycsdn.beginToScrapy(headers, proxy_list)
         except:
             pass
