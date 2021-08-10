@@ -15,8 +15,8 @@ Annotation by Yue Yang:
     a. the split-page method now dosn't work, so we adapt a not split-page method.
     b. we change from sleeping a fixed time to sleep a random time, which is more like the real visit.
     c. a single thread to multi-thread
-	d. add exception-handle.
-	
+    d. add exception-handle.
+    
 3. note that we use some proxies which comes from  'https://www.kuaidaili.com/free/inha/'
     sometimes we may fail to visit the web, please try again. 
     sleeping before visit the proxy-get web again can reduce the risk of failure.
@@ -34,70 +34,71 @@ from fake_useragent import UserAgent
 from lxml import etree
 import ssl
 import _thread, threading
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
-        }
+    'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+}
 
 
-class ScrapyMyCSDN:
+class ScrapyMyCSDN :
     """ class for csdn"""
 
-    def __init__(self, blogname, header = None):
+    def __init__(self, blogname, header=None) :
         """init 类似于构造函数 param[in]:blogname:博客名"""
         csdn_url = 'https://blog.csdn.net/'  # 常规csdnurl
         self.blogurl = csdn_url + blogname  # 拼接字符串成需要爬取的主页url
         self.blog_vs = 0  # 博客访客量
+        self.articles = []
 
-        while True:
-            article_doc = requests.get(self.blogurl, timeout=10, headers=header)  # 访问该网站
-            if article_doc.status_code == 200 :
-                cur_page_html = article_doc.text
-                soup = BeautifulSoup(cur_page_html, 'html.parser')
-                self.articles = soup.find_all('article', class_="blog-list-box")
-                self.blog_nums = len(self.articles)  # 原创博客数量
-                if self.blog_nums > 0:
-                    break
-                else:
-                    time.sleep(10)
-            else:
-                time.sleep(10)
+        # class name definition (please keep these definitions consitent with csdn web)
+        self.BLOG_CLASS = 'article-item-box'
+        self.CENTER_NAME = '\"创作中心\"'
 
 
-    '''博客访问量'''
-    def get_vs(self, headers, proxies):
-        main_response = requests.get(
-            self.blogurl, timeout=10, headers=headers, proxies=proxies)
-        if main_response.status_code == 200:
-            soup = BeautifulSoup(main_response.text, 'html.parser')
-            ele = soup.find('div', class_='user-profile-statistics-num')
-            if ele is not None:
-                text = ele.text
-                self.blog_vs = int(text.replace(',',''))
-                return self.blog_vs
-            else:
-                return 0
-        else:
-            return 0
+        article_doc = requests.get(self.blogurl, timeout=10, headers=header)  # 访问该网站
+        if article_doc.status_code != 200 :
+            print(f'{self.blogurl} disconnected!')
+            exit(1)
+        cur_page_html = article_doc.text
+        soup = BeautifulSoup(cur_page_html, 'html.parser')
+        self.articles = soup.find_all(attrs={'class' : self.BLOG_CLASS})
+        if len(self.articles) == 0 :
+            print('No article was found!')
+            exit(1)
+
+    def getBlogNum(self) :
+        return len(self.articles)
+
+    # '''博客访问量'''
+    #
+    # def get_vs(self, headers, proxies) :
+    #     main_response = requests.get(
+    #         self.blogurl, timeout=10, headers=headers, proxies=proxies)
+    #     if main_response.status_code != 200 : return 0
+    #     soup = BeautifulSoup(main_response.text, 'html.parser')
+    #     ele = soup.find(text=self.CENTER_NAME)
+    #
+    #     pass
 
 
     '''Func:开始爬取，实际就是刷浏览量hhh'''
     '''param[in]:page_num:需要爬取的页数'''
     '''return:0:浏览量刷失败'''
-    def beginToScrapy(self, header, proxies : list):
+
+    def beginToScrapy(self, header, proxies: list) :
         # 每次都仅随机访问一半的博客，且访问每个博客的proxy都是临时随机抽取的，尽量模拟真实访问行为
-        article_links = random.sample(self.articles, int(len(self.articles)/2))
-        for link in article_links:
+        article_links = random.sample(self.articles, int(len(self.articles) / 2))
+        for link in article_links :
             # print(link.find('a')['href'])
             art_url = link.find('a')['href']
             requests.get(art_url, proxies=random.choice(proxies), headers=header)  # 进行访问
-            time.sleep(random.random()*10)
+            time.sleep(random.random() * 10)
 
 
-
-class IpPool:   # 获取免费代理ip
-    def __init__(self):
+class IpPool :  # 获取免费代理ip
+    def __init__(self) :
         def get_ip_list(url, _headers, proxies) :
             web_data = requests.get(url, headers=_headers, proxies=proxies)
             soup = BeautifulSoup(web_data.text, 'lxml')
@@ -148,57 +149,58 @@ class IpPool:   # 获取免费代理ip
         ]
 
         self.ip_pool = set()
-        while True:
-            for i in range(1, 8):
+        while True :
+            for i in range(1, 8) :
                 url = 'http://www.ip3366.net/free/?stype=1&page=%d' % i
                 ip_list = get_ip_list(url, _headers=self.random_header(), proxies=None)
                 self.ip_pool.update(ip_list)
-            if len(self.ip_pool) > 0:
-                print("Ip pool has %d proxy ip"%len(self.ip_pool))
+            if len(self.ip_pool) > 0 :
+                print("Ip pool has %d proxy ip" % len(self.ip_pool))
                 self.ip_pool = list(self.ip_pool)
                 return
-            else:
+            else :
                 time.sleep(10)
 
-
-    def random_header(self):
+    def random_header(self) :
         return {'User-Agent' : random.choice(self.UserAgents)}
 
+    def get_one_proxy(self) :
+        return {'http' : 'http://' + random.choice(self.ip_pool)}
 
-    def get_one_proxy(self):
-        return {'http': 'http://' + random.choice(self.ip_pool)}
 
-
-def run(threadName, name_, su_):
-    while su_ >= 10000:
+def run(threadName, name_, su_) :
+    while su_ >= 10000 :
         print("刷访客量的行为可不好哦，请不要太贪心！！(号被封了可别哭)")
         su_ = int(input("请输入您要刷的次数(这里的次数指博主您所有博客的访问次数，请注意我们只刷原创博客哦，支持原创！！！):"))
     mycsdn = ScrapyMyCSDN(name_, header=ip_pool.random_header())
 
-    vs_0 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
+    # vs_0 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
     time.sleep(1)
     failCnt = 0
 
-    for i in range(1, su_+1):
-        try:
-            if i < 10 or i % 10 == 0 :
-                vs = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
-                if vs > 0: print(f"{threadName}, {i} / {su_}, 访客量为"+":"+str(vs))
-            proxy_list = [ip_pool.get_one_proxy() for _ in range(mycsdn.blog_nums)]
+    for i in range(1, su_ + 1) :
+        try :
+            # if i < 10 or i % 10 == 0 :
+            #     vs = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
+            #     if vs > 0 : print(f"{threadName}, {i} / {su_}, 访客量为" + ":" + str(vs))
+            proxy_list = [ip_pool.get_one_proxy() for _ in range(mycsdn.getBlogNum())]
             mycsdn.beginToScrapy(headers, proxy_list)
-        except:
-            pass
+            print("放心，程序在正常运行")
+        except :
+            print("程序可能出了点问题")
+            failCnt += 1
+            if failCnt >= 10: exit(1)
 
-        time.sleep(random.random()*20)  # 给它休息时间 还是怕被封号的
+        time.sleep(random.random() * 20)  # 给它休息时间 还是怕被封号的
 
-    vs_1 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
-    if vs_1 > 0:
-        print(f"{threadName}刷后的访客量"+":"+str(vs_1), end='')
-        if vs_0 > 0:
-            print(",增加了" + str(vs_1 - vs_0) + "的访客量")
+    # vs_1 = mycsdn.get_vs(ip_pool.random_header(), ip_pool.get_one_proxy())
+    # if vs_1 > 0 :
+    #     print(f"{threadName}刷后的访客量" + ":" + str(vs_1), end='')
+    #     if vs_0 > 0 :
+    #         print(",增加了" + str(vs_1 - vs_0) + "的访客量")
 
 
-def multi_thread(t_num = 5):
+def multi_thread(t_num=5) :
     # 给自己刷访问量的同时也帮我刷刷吧，好人不会注释掉这一行的（反正是开的多线程，帮我刷也不会影响自己刷的效率哦）
     t0 = threading.Thread(target=run, args=(f'thread_yy', 'qq_43714612', su))
     t0.start()
@@ -209,16 +211,15 @@ def multi_thread(t_num = 5):
         trd_list.append(t)
         time.sleep(10)
 
+
 # set global var
 ip_pool = IpPool()
 
-if __name__ == '__main__':
+if __name__ == '__main__' :
     trd_list = []
-    blogname = 'qq_43714612'   # enter your blog name
-    su = 1000   # enter the times you want to visit for every thread and for every blog
+    blogname = 'qq_43714612'  # enter your blog name
+    su = 30  # enter the times you want to visit for every thread and for every blog
+    # total visit number = su * number of blogs * number of threads / 2
 
-    # run('Debug', blogname, su)
-    multi_thread(3)
-
-
-
+    run('Debug', blogname, su)
+# multi_thread(3)
